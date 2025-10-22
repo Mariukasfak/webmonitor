@@ -1,0 +1,71 @@
+name: Monitor eshop_total
+
+on:
+  schedule:
+    - cron: '*/30 * * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  issues: write
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Check eshop_total
+        id: check
+        run: node scripts/check.mjs
+
+      - name: Log summary
+        run: echo "${{ steps.check.outputs.message }} | Old=${{ steps.check.outputs.old }} | Current=${{ steps.check.outputs.current }} | Time=${{ steps.check.outputs.timestamp }}"
+
+      - name: Commit updated state
+        if: steps.check.outputs.changed == 'true'
+        env:
+          CURRENT: ${{ steps.check.outputs.current }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add state.json
+          git commit -m "chore: update eshop_total to ${CURRENT}"
+          git push
+
+      - name: Create alert issue
+        if: steps.check.outputs.changed == 'true'
+        uses: actions/github-script@v7
+        env:
+          OLD: ${{ steps.check.outputs.old }}
+          CURRENT: ${{ steps.check.outputs.current }}
+          TIMESTAMP: ${{ steps.check.outputs.timestamp }}
+          URL: ${{ steps.check.outputs.url }}
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const { OLD, CURRENT, TIMESTAMP, URL } = process.env;
+            const title = `eshop_total changed: ${OLD} -> ${CURRENT}`;
+            const body = [
+              `Detected change on ${TIMESTAMP}.`,
+              '',
+              `URL: ${URL}`,
+              '',
+              `Previous: ${OLD}`,
+              `Current: ${CURRENT}`,
+            ].join('\n');
+            await github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title,
+              body,
+              labels: ['alert', 'eshop_total']
+            });

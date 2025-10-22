@@ -69,18 +69,3 @@ jobs:
               body,
               labels: ['alert', 'eshop_total']
             });
-
-      - name: Telegram alert (optional)
-        if: steps.check.outputs.changed == 'true' && secrets.TELEGRAM_BOT_TOKEN && secrets.TELEGRAM_CHAT_ID
-        env:
-          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
-          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
-          OLD: ${{ steps.check.outputs.old }}
-          CURRENT: ${{ steps.check.outputs.current }}
-          TIMESTAMP: ${{ steps.check.outputs.timestamp }}
-          URL: ${{ steps.check.outputs.url }}
-        run: |
-          TEXT="eshop_total pasikeitė: ${OLD} -> ${CURRENT} (${TIMESTAMP})\n${URL}"
-          curl -sS -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
-            -d "chat_id=${TELEGRAM_CHAT_ID}" \
-            --data-urlencode "text=${TEXT}"

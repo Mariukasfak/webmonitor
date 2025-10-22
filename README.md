@@ -5,7 +5,7 @@ Monitors the public page https://www.vmi.lt/pardavimai/lt/e-parduotuve every 30 
 - Free on public repositories (GitHub Actions schedule)
 - No external services or secrets required
 - Uses built‑in Node.js `fetch` (Node 20)
- - Optional Telegram notification on change (set two secrets)
+ - Alerts via GitHub Issues (enable repo Watch to get emails/push)
 
 ## How it works
 
@@ -14,7 +14,6 @@ Monitors the public page https://www.vmi.lt/pardavimai/lt/e-parduotuve every 30 
 3. If it changed, the workflow:
    - Commits the new value to `state.json`
    - Creates a new GitHub Issue with details (GitHub will notify you if you watch the repo)
-   - Optionally sends a Telegram message if secrets are configured
 
 ## Setup
 
@@ -43,18 +42,9 @@ node scripts/check.mjs
 - Schedule: change the `cron` in `.github/workflows/scrape.yml`.
 - Notification channel: by default Issues/notifications are used (simplest, no secrets). If you prefer Telegram/Discord/Slack, add a step to post to a webhook using a repo secret and run it only when `CHANGED == 'true'`.
 
-### Email notifications
+### Email/push notifications
 
-- GitHub will email you when a new Issue is created if your notification settings allow it and you "Watch" the repository (Watch → All Activity).
-
-### Telegram notifications (optional)
-
-1. Create a Telegram bot via @BotFather, get the bot token.
-2. Obtain your chat id. Easiest: message your bot once, then use a bot like @userinfobot or call `getUpdates` on your bot to see the chat id.
-3. In your GitHub repo Settings → Secrets and variables → Actions → New repository secret, add:
-   - `TELEGRAM_BOT_TOKEN` = your bot token
-   - `TELEGRAM_CHAT_ID` = your chat id
-4. The workflow will send a message only when a change is detected.
+- GitHub siunčia el. laišką/push, kai sukuriamas naujas Issue, jeigu esate įjungę repo pranešimus: Watch → All Activity ir jūsų GitHub notifikacijų nustatymai leidžia laiškus.
 
 ## Notes
 
